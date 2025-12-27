@@ -49,10 +49,11 @@ export async function registerRoutes(
     try {
       const bodySchema = api.maintenance.create.input.extend({
         scheduledDate: z.coerce.date(),
-        durationHours: z.coerce.number().optional(),
+        type: z.enum(["corrective", "preventive"]),
+        durationHours: z.coerce.number().min(1),
       });
       const input = bodySchema.parse(req.body);
-      const request = await storage.createMaintenanceRequest(input);
+      const request = await storage.createMaintenanceRequest(input as any);
       res.status(201).json(request);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -69,9 +70,11 @@ export async function registerRoutes(
     try {
       const bodySchema = api.maintenance.update.input.extend({
         scheduledDate: z.coerce.date().optional(),
+        type: z.enum(["corrective", "preventive"]).optional(),
+        durationHours: z.coerce.number().min(1).optional(),
       });
       const input = bodySchema.parse(req.body);
-      const request = await storage.updateMaintenanceRequest(Number(req.params.id), input);
+      const request = await storage.updateMaintenanceRequest(Number(req.params.id), input as any);
       res.json(request);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -85,41 +88,5 @@ export async function registerRoutes(
     }
   });
 
-  // Seed Data
-  await seedDatabase();
-
   return httpServer;
-}
-
-async function seedDatabase() {
-  const equipment = await storage.getEquipment();
-  if (equipment.length === 0) {
-    const depts = ["Engineering", "Operations", "Logistics", "IT"];
-    
-    // Seed Equipment
-    const eq1 = await storage.createEquipment({ name: "Hydraulic Press X1", serialNumber: "HP-2024-001", department: "Operations", assignedTeam: "Alpha", isUnderRepair: true });
-    const eq2 = await storage.createEquipment({ name: "Conveyor Belt System", serialNumber: "CB-2023-882", department: "Logistics", assignedTeam: "Beta", isUnderRepair: false });
-    const eq3 = await storage.createEquipment({ name: "CNC Milling Machine", serialNumber: "CNC-992-X", department: "Engineering", assignedTeam: "Gamma", isUnderRepair: true });
-    const eq4 = await storage.createEquipment({ name: "Forklift MK-4", serialNumber: "FL-5521", department: "Logistics", assignedTeam: "Delta", isUnderRepair: false });
-    const eq5 = await storage.createEquipment({ name: "Server Rack A1", serialNumber: "SR-001-IT", department: "IT", assignedTeam: "Omega", isUnderRepair: false });
-
-    // Seed Requests
-    const now = new Date();
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    await storage.createMaintenanceRequest({ title: "Oil Leak in Piston", equipmentId: eq1.id, status: "in_progress", scheduledDate: yesterday, technician: "Sarah Connor", priority: "high" });
-    await storage.createMaintenanceRequest({ title: "Annual Safety Check", equipmentId: eq1.id, status: "new", scheduledDate: tomorrow, technician: "John Doe", priority: "low" });
-    
-    await storage.createMaintenanceRequest({ title: "Belt Alignment", equipmentId: eq2.id, status: "repaired", scheduledDate: lastWeek, technician: "Mike Ross", priority: "medium" });
-    
-    await storage.createMaintenanceRequest({ title: "Spindle Calibration", equipmentId: eq3.id, status: "in_progress", scheduledDate: yesterday, technician: "Jessica Pearson", priority: "critical" });
-    await storage.createMaintenanceRequest({ title: "Coolant Flush", equipmentId: eq3.id, status: "new", scheduledDate: tomorrow, technician: "Louis Litt", priority: "medium" });
-
-    await storage.createMaintenanceRequest({ title: "Battery Replacement", equipmentId: eq4.id, status: "new", scheduledDate: tomorrow, technician: "Harvey Specter", priority: "medium" });
-    
-    await storage.createMaintenanceRequest({ title: "Firmware Update", equipmentId: eq5.id, status: "new", scheduledDate: tomorrow, technician: "Donna Paulsen", priority: "low" });
-    await storage.createMaintenanceRequest({ title: "Fan Noise Investigation", equipmentId: eq5.id, status: "scrap", scheduledDate: lastWeek, technician: "Rachel Zane", priority: "low" });
-  }
 }
