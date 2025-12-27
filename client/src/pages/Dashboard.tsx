@@ -1,5 +1,18 @@
+import { useState, useEffect } from "react";
+import { useEquipmentList } from "@/hooks/use-equipment";
+import { useMaintenanceRequests } from "@/hooks/use-maintenance";
+import { EquipmentCard } from "@/components/EquipmentCard";
+import { KanbanBoard } from "@/components/KanbanBoard";
+import { CreateEquipmentDialog } from "@/components/CreateEquipmentDialog";
+import { CreateMaintenanceDialog } from "@/components/CreateMaintenanceDialog";
+import { CalendarView } from "@/components/CalendarView";
 import { AnalyticsReport } from "@/components/AnalyticsReport";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { Search, LayoutGrid, Kanban, RefreshCcw, Calendar as CalendarIconLucide, ShieldCheck, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { format } from "date-fns";
 
 export default function Dashboard() {
   const { data: equipment, isLoading: loadingEquipment, refetch: refetchEquipment } = useEquipmentList();
