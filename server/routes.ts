@@ -47,7 +47,10 @@ export async function registerRoutes(
 
   app.post(api.maintenance.create.path, async (req, res) => {
     try {
-      const input = api.maintenance.create.input.parse(req.body);
+      const bodySchema = api.maintenance.create.input.extend({
+        scheduledDate: z.coerce.date(),
+      });
+      const input = bodySchema.parse(req.body);
       const request = await storage.createMaintenanceRequest(input);
       res.status(201).json(request);
     } catch (err) {
@@ -63,7 +66,10 @@ export async function registerRoutes(
 
   app.patch(api.maintenance.update.path, async (req, res) => {
     try {
-      const input = api.maintenance.update.input.parse(req.body);
+      const bodySchema = api.maintenance.update.input.extend({
+        scheduledDate: z.coerce.date().optional(),
+      });
+      const input = bodySchema.parse(req.body);
       const request = await storage.updateMaintenanceRequest(Number(req.params.id), input);
       res.json(request);
     } catch (err) {
