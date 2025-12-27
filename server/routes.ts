@@ -49,6 +49,7 @@ export async function registerRoutes(
     try {
       const bodySchema = api.maintenance.create.input.extend({
         scheduledDate: z.coerce.date(),
+        durationHours: z.coerce.number().optional(),
       });
       const input = bodySchema.parse(req.body);
       const request = await storage.createMaintenanceRequest(input);

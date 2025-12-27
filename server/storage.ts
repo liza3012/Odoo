@@ -52,7 +52,9 @@ export class MemStorage implements IStorage {
     const request: MaintenanceRequest = { 
       ...insertRequest, 
       id,
-      isOverdue 
+      isOverdue,
+      durationHours: insertRequest.durationHours ?? 1,
+      type: insertRequest.type ?? 'corrective'
     };
     this.requests.set(id, request);
     return request;
@@ -64,12 +66,6 @@ export class MemStorage implements IStorage {
       throw new Error(`Maintenance request ${id} not found`);
     }
     
-    // Check status change to update equipment status if needed
-    if (updateRequest.status) {
-       // Logic to update parent equipment status could go here if we wanted to be strict,
-       // but for this MVP we'll handle it visually or via simple checks
-    }
-
     const updated = { ...existing, ...updateRequest };
     
     // Re-check overdue
