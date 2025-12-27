@@ -72,15 +72,16 @@ export function CalendarView({ requests, onDateClick }: CalendarViewProps) {
           className="p-4"
           onSelect={(date) => date && onDateClick?.(date)}
           components={ {
-            Day: ({ date, ...props }) => {
+            Day: ({ date, displayMonth, ...props }: any) => {
               const hasRequests = preventiveRequests.some(r => isSameDay(new Date(r.scheduledDate), date));
+              const isSelected = props.selected; 
               return (
                 <div className="relative h-12 w-12 flex flex-col items-center justify-center">
                   <button
                     {...props}
                     className={cn(
                       "h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 hover-elevate",
-                      props.selected && "bg-primary/20 text-primary border border-primary/30",
+                      isSelected && "bg-primary/20 text-primary border border-primary/30",
                       hasRequests && "font-bold text-white"
                     )}
                   >

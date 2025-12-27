@@ -130,7 +130,7 @@ export default function Dashboard() {
               {filteredEquipment?.length === 0 && (
                 <div className="col-span-full py-20 text-center text-muted-foreground">
                   <p className="text-lg">No equipment found matching "{searchTerm}"</p>
-                  <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2 text-primary">
+                  <Button variant="ghost" onClick={() => setSearchTerm("")} className="mt-2 text-primary hover:bg-primary/10">
                     Clear search
                   </Button>
                 </div>

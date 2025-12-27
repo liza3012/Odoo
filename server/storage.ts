@@ -35,7 +35,11 @@ export class MemStorage implements IStorage {
 
   async createEquipment(insertEquipment: InsertEquipment): Promise<Equipment> {
     const id = this.equipmentIdCounter++;
-    const equipment: Equipment = { ...insertEquipment, id };
+    const equipment: Equipment = { 
+      ...insertEquipment, 
+      id,
+      isUnderRepair: insertEquipment.isUnderRepair ?? false
+    };
     this.equipment.set(id, equipment);
     return equipment;
   }
@@ -52,9 +56,11 @@ export class MemStorage implements IStorage {
     const request: MaintenanceRequest = { 
       ...insertRequest, 
       id,
-      isOverdue,
+      isOverdue: isOverdue || false,
       durationHours: insertRequest.durationHours ?? 1,
-      type: insertRequest.type ?? 'corrective'
+      type: insertRequest.type ?? 'corrective',
+      status: insertRequest.status ?? 'new',
+      priority: insertRequest.priority ?? 'medium'
     };
     this.requests.set(id, request);
     return request;

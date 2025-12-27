@@ -149,7 +149,7 @@ export function CreateMaintenanceDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
                       <FormControl>
                         <SelectTrigger className="bg-white/5 border-white/10">
                           <SelectValue placeholder="Select priority" />
@@ -227,7 +227,8 @@ export function CreateMaintenanceDialog({
                         min="1" 
                         className="bg-white/5 border-white/10" 
                         {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
