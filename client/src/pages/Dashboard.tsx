@@ -1,20 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEquipmentList } from "@/hooks/use-equipment";
 import { useMaintenanceRequests } from "@/hooks/use-maintenance";
 import { EquipmentCard } from "@/components/EquipmentCard";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { CreateEquipmentDialog } from "@/components/CreateEquipmentDialog";
 import { CreateMaintenanceDialog } from "@/components/CreateMaintenanceDialog";
+import { CalendarView } from "@/components/CalendarView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Search, LayoutGrid, Kanban, RefreshCcw } from "lucide-react";
+import { Search, LayoutGrid, Kanban, RefreshCcw, Calendar as CalendarIconLucide, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { format } from "date-fns";
 
 export default function Dashboard() {
   const { data: equipment, isLoading: loadingEquipment, refetch: refetchEquipment } = useEquipmentList();
   const { data: requests, isLoading: loadingRequests, refetch: refetchRequests } = useMaintenanceRequests();
   const [searchTerm, setSearchTerm] = useState("");
-  const [view, setView] = useState<"grid" | "kanban">("grid");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const filteredEquipment = equipment?.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -25,6 +29,11 @@ export default function Dashboard() {
     if (!requests) return 0;
     return requests.filter(r => r.equipmentId === equipmentId && r.status !== "repaired").length;
   }
+
+  const handleCalendarDateClick = (date: Date) => {
+    setSelectedDate(date);
+    setShowCreateDialog(true);
+  };
 
   if (loadingEquipment || loadingRequests) {
     return (
@@ -68,7 +77,11 @@ export default function Dashboard() {
               />
             </div>
             <CreateEquipmentDialog />
-            <CreateMaintenanceDialog />
+            <CreateMaintenanceDialog 
+              open={showCreateDialog} 
+              onOpenChange={setShowCreateDialog}
+              defaultDate={selectedDate}
+            />
           </div>
         </div>
       </header>
@@ -85,6 +98,10 @@ export default function Dashboard() {
               <TabsTrigger value="kanban" className="rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
                 <Kanban className="w-4 h-4 mr-2" />
                 Maintenance Board
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+                <CalendarIconLucide className="w-4 h-4 mr-2" />
+                Calendar View
               </TabsTrigger>
             </TabsList>
             
@@ -126,6 +143,45 @@ export default function Dashboard() {
               requests={requests || []} 
               equipmentList={equipment || []} 
             />
+          </TabsContent>
+
+          <TabsContent value="calendar" className="mt-0 focus-visible:outline-none">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <CalendarView 
+                  requests={requests || []} 
+                  onDateClick={handleCalendarDateClick}
+                />
+              </div>
+              <div className="space-y-6">
+                <Card className="glass-panel border-white/10 p-6">
+                  <h3 className="text-lg font-display font-bold mb-4">Upcoming PM</h3>
+                  <div className="space-y-4">
+                    {requests?.filter(r => r.type === "preventive" && new Date(r.scheduledDate) >= new Date())
+                      .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
+                      .slice(0, 5)
+                      .map(req => (
+                        <div key={req.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                            <ShieldCheck className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 overflow-hidden">
+                            <div className="font-semibold text-sm truncate">{req.title}</div>
+                            <div className="text-[10px] text-muted-foreground font-mono">
+                              {format(new Date(req.scheduledDate), "MMM d")} • {req.technician}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    {requests?.filter(r => r.type === "preventive" && new Date(r.scheduledDate) >= new Date()).length === 0 && (
+                      <div className="text-center py-6 text-sm text-muted-foreground">
+                        No upcoming preventive tasks.
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

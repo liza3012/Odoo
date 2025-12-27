@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertMaintenanceRequestSchema, type CreateMaintenanceRequest, type Equipment } from "@shared/schema";
@@ -29,8 +29,19 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
-export function CreateMaintenanceDialog() {
-  const [open, setOpen] = useState(false);
+export function CreateMaintenanceDialog({ 
+  open: externalOpen, 
+  onOpenChange: externalOnOpenChange,
+  defaultDate
+}: { 
+  open?: boolean; 
+  onOpenChange?: (open: boolean) => void;
+  defaultDate?: Date;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = externalOnOpenChange ?? setInternalOpen;
+
   const { toast } = useToast();
   const createRequest = useCreateMaintenanceRequest();
   const { data: equipmentList } = useEquipmentList();
@@ -42,12 +53,27 @@ export function CreateMaintenanceDialog() {
       status: "new",
       technician: "",
       priority: "medium",
+      type: "corrective",
+      durationHours: 1,
+      scheduledDate: defaultDate ?? new Date(),
     },
   });
 
+  // Update form when defaultDate changes
+  useEffect(() => {
+    if (defaultDate) {
+      form.setValue("scheduledDate", defaultDate);
+    }
+  }, [defaultDate, form]);
+
   async function onSubmit(data: CreateMaintenanceRequest) {
     try {
-      await createRequest.mutateAsync(data);
+      // Ensure numeric duration
+      const payload = {
+        ...data,
+        durationHours: Number(data.durationHours)
+      };
+      await createRequest.mutateAsync(payload as any);
       toast({ title: "Success", description: "Request created successfully" });
       setOpen(false);
       form.reset();
@@ -160,6 +186,50 @@ export function CreateMaintenanceDialog() {
                         <SelectItem value="Harvey Specter">Harvey Specter</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Request Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-white/5 border-white/10">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="corrective">Corrective</SelectItem>
+                        <SelectItem value="preventive">Preventive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="durationHours"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration (Hours)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        className="bg-white/5 border-white/10" 
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
