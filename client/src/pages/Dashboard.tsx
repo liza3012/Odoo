@@ -1,17 +1,5 @@
-import { useState, useEffect } from "react";
-import { useEquipmentList } from "@/hooks/use-equipment";
-import { useMaintenanceRequests } from "@/hooks/use-maintenance";
-import { EquipmentCard } from "@/components/EquipmentCard";
-import { KanbanBoard } from "@/components/KanbanBoard";
-import { CreateEquipmentDialog } from "@/components/CreateEquipmentDialog";
-import { CreateMaintenanceDialog } from "@/components/CreateMaintenanceDialog";
-import { CalendarView } from "@/components/CalendarView";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Search, LayoutGrid, Kanban, RefreshCcw, Calendar as CalendarIconLucide, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { format } from "date-fns";
+import { AnalyticsReport } from "@/components/AnalyticsReport";
+import { Search, LayoutGrid, Kanban, RefreshCcw, Calendar as CalendarIconLucide, ShieldCheck, BarChart3 } from "lucide-react";
 
 export default function Dashboard() {
   const { data: equipment, isLoading: loadingEquipment, refetch: refetchEquipment } = useEquipmentList();
@@ -103,6 +91,10 @@ export default function Dashboard() {
                 <CalendarIconLucide className="w-4 h-4 mr-2" />
                 Calendar View
               </TabsTrigger>
+              <TabsTrigger value="reports" className="rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Pivot Report
+              </TabsTrigger>
             </TabsList>
             
             <div className="flex gap-2">
@@ -182,6 +174,13 @@ export default function Dashboard() {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-0 focus-visible:outline-none">
+            <AnalyticsReport 
+              requests={requests || []} 
+              equipment={equipment || []} 
+            />
           </TabsContent>
         </Tabs>
       </main>
