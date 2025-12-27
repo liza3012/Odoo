@@ -17,6 +17,8 @@ export const maintenanceRequests = pgTable("maintenance_requests", {
   title: text("title").notNull(),
   equipmentId: integer("equipment_id").notNull(),
   status: text("status", { enum: ["new", "in_progress", "repaired", "scrap"] }).notNull().default("new"),
+  type: text("type", { enum: ["corrective", "preventive"] }).notNull().default("corrective"),
+  durationHours: integer("duration_hours").default(1),
   scheduledDate: timestamp("scheduled_date").notNull(),
   technician: text("technician").notNull(), // Just a name for avatar seed
   priority: text("priority", { enum: ["low", "medium", "high", "critical"] }).default("medium"),
